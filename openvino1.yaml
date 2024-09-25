@@ -1,0 +1,80 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: openvino1
+  annotations:
+    description: VM 
+  labels:
+    app: openvino1
+    os.template.kubevirt.io/rhel: 'true'
+  namespace: default
+spec:
+  running: true
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: small
+        vm.kubevirt.io/os: rhel
+        vm.kubevirt.io/workload: server
+      labels:
+        kubevirt.io/domain: openvino1
+        kubevirt.io/size: small
+    spec:
+      architecture: amd64
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+          networkInterfaceMultiqueue: true
+          rng: {}
+        features:
+          acpi: {}
+          smm:
+            enabled: true
+        firmware:
+          bootloader:
+            efi: {}
+        machine:
+          type: q35
+        memory:
+          guest: 2Gi
+      hostname: openvino1
+      networks:
+        - name: default
+          pod: {}
+      terminationGracePeriodSeconds: 180
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: registry.redhat.io/rhel8/rhel:8.6
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: rhel
+              password: rhel
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+              package_update: true
+              packages:
+                - vim
+                - wget
+              runcmd:
+                - systemctl start network
+                - systemctl enable network
+      imagePullSecrets:
+        - name: my-redhat-secret
+

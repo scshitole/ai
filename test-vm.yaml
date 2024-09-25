@@ -1,0 +1,73 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: test-vm
+  annotations:
+    description: VM 
+  labels:
+    app: test-vm
+    os.template.kubevirt.io/fedora: 'true'
+  namespace: default
+spec:
+  running: true
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: small
+        vm.kubevirt.io/os: fedora
+        vm.kubevirt.io/workload: server
+      labels:
+        kubevirt.io/domain: test-vm
+        kubevirt.io/size: small
+    spec:
+      domain:
+        cpu:
+          cores: 2
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+          networkInterfaceMultiqueue: true
+          rng: {}
+        features:
+          acpi: {}
+          smm:
+            enabled: true
+        firmware:
+          bootloader:
+            efi: {}
+        machine:
+          type: q35
+        memory:
+          guest: 4Gi
+      hostname: test-vm
+      networks:
+        - name: default
+          pod: {}
+      terminationGracePeriodSeconds: 180
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: fedora
+              chpasswd: { expire: False }
+              ssh_pwauth: True
+              runcmd:
+                - [ systemctl, enable, sshd ]
+                - [ systemctl, start, sshd ]
+          name: cloudinitdisk
+
