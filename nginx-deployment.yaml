@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-proxy
-  labels:
-    app: nginx-proxy
 spec:
   replicas: 1
   selector:
@@ -19,10 +17,18 @@ spec:
         image: nginx:latest
         ports:
         - containerPort: 80
+        - containerPort: 443
         volumeMounts:
         - name: nginx-config-volume
           mountPath: /etc/nginx/conf.d
+        - name: nginx-ssl-cert
+          mountPath: /etc/nginx/ssl
+          readOnly: true
       volumes:
       - name: nginx-config-volume
         configMap:
           name: nginx-config
+      - name: nginx-ssl-cert
+        secret:
+          secretName: nginx-ssl-cert
+ 
