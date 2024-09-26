@@ -8,8 +8,14 @@ spec:
   selector:
     app: nginx-proxy
   ports:
-    - protocol: TCP
+    - name: http                  # Name for the HTTP port
+      protocol: TCP
       port: 80
       targetPort: 80
       nodePort: 30080
+    - name: https                 # Name for the HTTPS port
+      protocol: TCP
+      port: 443
+      targetPort: 443
+      nodePort: 30443
   externalTrafficPolicy: Cluster
